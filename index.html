@@ -543,7 +543,7 @@
     <div class="form-row">
       <div class="field">
         <label>部位</label>
-        <select id="muscle">
+        <select id="muscle" onchange="updateExerciseOptions()">
           <option value="胸">胸</option>
           <option value="背中">背中</option>
           <option value="肩">肩</option>
@@ -561,7 +561,7 @@
 
     <div class="field" style="margin-bottom:12px">
       <label>種目名</label>
-      <input type="text" id="exerciseName" placeholder="例：ベンチプレス">
+      <select id="exerciseName"></select>
     </div>
 
     <div class="sets-container" id="setsContainer"></div>
@@ -623,6 +623,23 @@
 <div class="toast" id="toast">✓ 記録しました！</div>
 
 <script>
+  // ===== EXERCISE LIST =====
+  const EXERCISES = {
+    胸: ['ベンチプレス','インクラインベンチプレス','デクラインベンチプレス','ダンベルフライ','ケーブルクロスオーバー','ディップス','プッシュアップ','チェストプレス（マシン）'],
+    背中: ['デッドリフト','懸垂（チンアップ）','ラットプルダウン','ベントオーバーロウ','シーテッドロウ','Tバーロウ','ワンアームダンベルロウ','フェイスプル'],
+    肩: ['ミリタリープレス','ダンベルショルダープレス','サイドレイズ','フロントレイズ','リアデルトフライ','アーノルドプレス','アップライトロウ','ケーブルサイドレイズ'],
+    腕: ['バーベルカール','ダンベルカール','ハンマーカール','プリーチャーカール','トライセプスプレスダウン','ライイングトライセプスエクステンション','ナローベンチプレス','ディップス（腕）'],
+    脚: ['スクワット','レッグプレス','ルーマニアンデッドリフト','ランジ','レッグカール','レッグエクステンション','カーフレイズ','ブルガリアンスクワット'],
+    腹: ['クランチ','レッグレイズ','プランク','ロシアンツイスト','アブローラー','ドラゴンフラッグ','サイドプランク','ケーブルクランチ'],
+    全身: ['バーピー','ケトルベルスイング','クリーン＆プレス','スナッチ','トルコ式ゲットアップ','マウンテンクライマー','ジャンプスクワット','メドボールスラム'],
+  };
+
+  function updateExerciseOptions() {
+    const muscle = document.getElementById('muscle').value;
+    const sel = document.getElementById('exerciseName');
+    sel.innerHTML = EXERCISES[muscle].map(e => `<option value="${e}">${e}</option>`).join('');
+  }
+
   // ===== STATE =====
   let workouts = JSON.parse(localStorage.getItem('ironlog_workouts') || '[]');
   let sets = [];
@@ -634,6 +651,7 @@
     document.getElementById('todayDate').textContent =
       today.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
     document.getElementById('workoutDate').value = today.toISOString().split('T')[0];
+    updateExerciseOptions();
     addSet();
     renderHistory();
     renderStats();
@@ -693,8 +711,8 @@
 
   // ===== SAVE =====
   function saveWorkout() {
-    const exercise = document.getElementById('exerciseName').value.trim();
-    if (!exercise) { alert('種目名を入力してください'); return; }
+    const exercise = document.getElementById('exerciseName').value;
+    if (!exercise) { alert('種目名を選択してください'); return; }
     const validSets = sets.filter(s => s.weight || s.reps);
     if (validSets.length === 0) { alert('セットを入力してください'); return; }
 
@@ -712,7 +730,6 @@
     showToast('✓ 記録しました！');
 
     // reset
-    document.getElementById('exerciseName').value = '';
     document.getElementById('noteText').value = '';
     sets = [];
     addSet();
