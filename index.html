@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IRON LOG — 筋トレ記録</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --accent: #ff3c00;
+    --accent2: #ff8c00;
+    --text: #f0ece4;
+    --muted: #666;
+    --border: #2a2a2a;
+    --success: #00c96e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg);
+    padding: 20px 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .date-badge {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    padding-bottom: 0;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; animation: fadeIn 0.2s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* RECORD FORM */
+  .form-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .field input, .field select, .field textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea { resize: none; height: 70px; font-size: 13px; }
+
+  .field select option { background: var(--surface2); }
+
+  /* SET BUILDER */
+  .set-builder {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .set-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .set-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .set-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: color 0.2s;
+  }
+  .set-delete:hover { color: var(--accent); }
+
+  .sets-container { margin-bottom: 12px; }
+
+  .add-set-btn {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .add-set-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* SAVE BTN */
+  .save-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    margin-top: 4px;
+  }
+  .save-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+  /* HISTORY */
+  .history-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .history-empty .big-icon { font-size: 48px; margin-bottom: 12px; }
+
+  .workout-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .workout-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  }
+
+  .workout-card:hover { border-color: var(--accent); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .card-date {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .card-muscle {
+    font-size: 11px;
+    background: rgba(255,60,0,0.15);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+
+  .card-exercise {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .card-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .set-chip {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  .set-chip span { color: var(--accent2); font-weight: 700; }
+
+  .card-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.2s;
+  }
+
+  .btn-delete { background: rgba(255,60,0,0.15); color: var(--accent); }
+  .btn-delete:hover { background: rgba(255,60,0,0.25); }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .muscle-stats {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+
+  .muscle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .muscle-row:last-child { margin-bottom: 0; }
+
+  .muscle-name {
+    font-size: 12px;
+    letter-spacing: 1px;
+    min-width: 80px;
+    font-weight: 700;
+  }
+
+  .muscle-bar-wrap {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: 20px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .muscle-bar {
+    height: 100%;
+    background: linear-gradient(to right, var(--accent), var(--accent2));
+    border-radius: 20px;
+    transition: width 0.8s ease;
+  }
+
+  .muscle-count {
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 24px;
+    text-align: right;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--success);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 200;
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 14px 0 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 10px;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+  }
+
+  .nav-btn.active { color: var(--accent); }
+
+  .nav-icon { font-size: 22px; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+
+  .filter-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">IRON LOG</div>
+    <div class="date-badge" id="todayDate"></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchPage('record')">記録</div>
+    <div class="tab" onclick="switchPage('history')">履歴</div>
+    <div class="tab" onclick="switchPage('stats')">統計</div>
+  </div>
+</header>
+
+<!-- RECORD PAGE -->
+<div class="page active" id="page-record">
+  <br>
+  <div class="section-title">今日のトレーニング</div>
+
+  <div class="form-card">
+    <div class="form-row">
+      <div class="field">
+        <label>部位</label>
+        <select id="muscle">
+          <option value="胸">胸</option>
+          <option value="背中">背中</option>
+          <option value="肩">肩</option>
+          <option value="腕">腕</option>
+          <option value="脚">脚</option>
+          <option value="腹">腹</option>
+          <option value="全身">全身</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>日付</label>
+        <input type="date" id="workoutDate">
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:12px">
+      <label>種目名</label>
+      <input type="text" id="exerciseName" placeholder="例：ベンチプレス">
+    </div>
+
+    <div class="sets-container" id="setsContainer"></div>
+    <button class="add-set-btn" onclick="addSet()">＋ セットを追加</button>
+
+    <div class="field" style="margin-top:12px">
+      <label>メモ</label>
+      <textarea id="noteText" placeholder="フォーム・体調・気づきなど..."></textarea>
+    </div>
+
+    <button class="save-btn" onclick="saveWorkout()">SAVE WORKOUT</button>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <br>
+  <div class="section-title">履歴</div>
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-chip active" onclick="filterHistory('全て')">全て</button>
+    <button class="filter-chip" onclick="filterHistory('胸')">胸</button>
+    <button class="filter-chip" onclick="filterHistory('背中')">背中</button>
+    <button class="filter-chip" onclick="filterHistory('肩')">肩</button>
+    <button class="filter-chip" onclick="filterHistory('腕')">腕</button>
+    <button class="filter-chip" onclick="filterHistory('脚')">脚</button>
+    <button class="filter-chip" onclick="filterHistory('腹')">腹</button>
+    <button class="filter-chip" onclick="filterHistory('全身')">全身</button>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<!-- STATS PAGE -->
+<div class="page" id="page-stats">
+  <br>
+  <div class="section-title">統計</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">総記録数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statDays">0</div>
+      <div class="stat-label">トレーニング日数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statSets">0</div>
+      <div class="stat-label">総セット数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statVolume">0</div>
+      <div class="stat-label">総ボリューム(kg)</div>
+    </div>
+  </div>
+
+  <div class="section-title">部位別</div>
+  <div class="muscle-stats" id="muscleStats"></div>
+</div>
+
+<div class="toast" id="toast">✓ 記録しました！</div>
+
+<script>
+  // ===== STATE =====
+  let workouts = JSON.parse(localStorage.getItem('ironlog_workouts') || '[]');
+  let sets = [];
+  let currentFilter = '全て';
+
+  // ===== INIT =====
+  function init() {
+    const today = new Date();
+    document.getElementById('todayDate').textContent =
+      today.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+    document.getElementById('workoutDate').value = today.toISOString().split('T')[0];
+    addSet();
+    renderHistory();
+    renderStats();
+  }
+
+  // ===== PAGE SWITCH =====
+  function switchPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    const tabs = ['record','history','stats'];
+    document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+    if (name === 'history') renderHistory();
+    if (name === 'stats') renderStats();
+  }
+
+  // ===== SETS =====
+  function addSet() {
+    sets.push({ weight: '', reps: '' });
+    renderSets();
+  }
+
+  function removeSet(i) {
+    if (sets.length === 1) return;
+    sets.splice(i, 1);
+    renderSets();
+  }
+
+  function renderSets() {
+    const container = document.getElementById('setsContainer');
+    container.innerHTML = sets.map((s, i) => `
+      <div class="set-builder">
+        <div class="set-header">
+          <span class="set-num">SET ${i+1}</span>
+          <button class="set-delete" onclick="removeSet(${i})">✕</button>
+        </div>
+        <div class="form-row three">
+          <div class="field">
+            <label>重量 (kg)</label>
+            <input type="number" inputmode="decimal" placeholder="60" value="${s.weight}"
+              oninput="sets[${i}].weight = this.value">
+          </div>
+          <div class="field">
+            <label>回数</label>
+            <input type="number" inputmode="numeric" placeholder="10" value="${s.reps}"
+              oninput="sets[${i}].reps = this.value">
+          </div>
+          <div class="field">
+            <label>RPE</label>
+            <input type="number" inputmode="decimal" placeholder="8" min="1" max="10" value="${s.rpe||''}"
+              oninput="sets[${i}].rpe = this.value">
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ===== SAVE =====
+  function saveWorkout() {
+    const exercise = document.getElementById('exerciseName').value.trim();
+    if (!exercise) { alert('種目名を入力してください'); return; }
+    const validSets = sets.filter(s => s.weight || s.reps);
+    if (validSets.length === 0) { alert('セットを入力してください'); return; }
+
+    const workout = {
+      id: Date.now(),
+      date: document.getElementById('workoutDate').value,
+      muscle: document.getElementById('muscle').value,
+      exercise,
+      sets: validSets,
+      note: document.getElementById('noteText').value.trim(),
+    };
+
+    workouts.unshift(workout);
+    localStorage.setItem('ironlog_workouts', JSON.stringify(workouts));
+    showToast('✓ 記録しました！');
+
+    // reset
+    document.getElementById('exerciseName').value = '';
+    document.getElementById('noteText').value = '';
+    sets = [];
+    addSet();
+  }
+
+  // ===== HISTORY =====
+  function filterHistory(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(c => {
+      c.classList.toggle('active', c.textContent === filter);
+    });
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const filtered = currentFilter === '全て' ? workouts : workouts.filter(w => w.muscle === currentFilter);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="history-empty"><div class="big-icon">🏋️</div>まだ記録がありません</div>`;
+      return;
+    }
+
+    // Group by date
+    const grouped = {};
+    filtered.forEach(w => {
+      if (!grouped[w.date]) grouped[w.date] = [];
+      grouped[w.date].push(w);
+    });
+
+    list.innerHTML = Object.keys(grouped).sort((a,b) => b.localeCompare(a)).map(date => {
+      const d = new Date(date + 'T00:00:00');
+      const label = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+      return `<div style="font-size:11px;color:var(--muted);letter-spacing:2px;margin:16px 0 8px;text-transform:uppercase">${label}</div>` +
+        grouped[date].map(w => workoutCard(w)).join('');
+    }).join('');
+  }
+
+  function workoutCard(w) {
+    const setsHtml = w.sets.map(s => {
+      let txt = '';
+      if (s.weight) txt += `<span>${s.weight}kg</span>`;
+      if (s.reps) txt += ` × ${s.reps}`;
+      if (s.rpe) txt += ` <span style="color:var(--muted)">RPE${s.rpe}</span>`;
+      return `<div class="set-chip">${txt}</div>`;
+    }).join('');
+
+    const noteHtml = w.note ? `<div class="card-note">"${w.note}"</div>` : '';
+
+    return `
+      <div class="workout-card">
+        <div class="card-header">
+          <span class="card-muscle">${w.muscle}</span>
+        </div>
+        <div class="card-exercise">${w.exercise}</div>
+        <div class="card-sets">${setsHtml}</div>
+        ${noteHtml}
+        <div class="card-actions">
+          <button class="card-btn btn-delete" onclick="deleteWorkout(${w.id})">削除</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function deleteWorkout(id) {
+    if (!confirm('この記録を削除しますか？')) return;
+    workouts = workouts.filter(w => w.id !== id);
+    localStorage.setItem('ironlog_workouts', JSON.stringify(workouts));
+    renderHistory();
+    renderStats();
+  }
+
+  // ===== STATS =====
+  function renderStats() {
+    const total = workouts.length;
+    const days = new Set(workouts.map(w => w.date)).size;
+    const totalSets = workouts.reduce((a, w) => a + w.sets.length, 0);
+    const totalVol = workouts.reduce((a, w) =>
+      a + w.sets.reduce((b, s) => b + (parseFloat(s.weight)||0) * (parseInt(s.reps)||0), 0), 0);
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statDays').textContent = days;
+    document.getElementById('statSets').textContent = totalSets;
+    document.getElementById('statVolume').textContent = Math.round(totalVol).toLocaleString();
+
+    // Muscle breakdown
+    const muscles = ['胸','背中','肩','腕','脚','腹','全身'];
+    const counts = {};
+    muscles.forEach(m => counts[m] = 0);
+    workouts.forEach(w => { if (counts[w.muscle] !== undefined) counts[w.muscle]++; });
+    const max = Math.max(...Object.values(counts), 1);
+
+    document.getElementById('muscleStats').innerHTML = muscles
+      .filter(m => counts[m] > 0)
+      .sort((a,b) => counts[b] - counts[a])
+      .map(m => `
+        <div class="muscle-row">
+          <span class="muscle-name">${m}</span>
+          <div class="muscle-bar-wrap">
+            <div class="muscle-bar" style="width:${(counts[m]/max*100)}%"></div>
+          </div>
+          <span class="muscle-count">${counts[m]}</span>
+        </div>
+      `).join('') || '<div style="color:var(--muted);font-size:13px">まだデータがありません</div>';
+  }
+
+  // ===== TOAST =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  init();
+</script>
+</body>
+</html>
